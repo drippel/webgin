@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+<title>Web Gin 0.1</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="stylesheet" type="text/css" media="all" th:href="@{/css/gin.css}" href="../css/gin.css" />
+</head>
+
+<body>
+	<div id="main">
+		<div id="header">Welcome to Web Gin 0.1</div>
+		<div id="content">
+			<div id="left">Left</div>
+			<div id="center">
+				<form action="/gin" method="post">
+					<div id="menu"><button name="action" value="new">New</button> <button name="action" value="save">Save</button> <button name="action" value="quit">Quit</button> <button name="action" value="cheat">Cheat</button> <button name="action" value="undo">Undo</button> <button name="action" value="settings">Settings</button></div>
+					<div id="score">Score : Round Vs Player</div>
+					<div id="computer">Computer: 1 2 3 4 5 6 7 8 9 10 11 Action: Deck</div>
+					<div id="play"><button name="action" value="discard">C</button> <button name="action" value="deck">D</button></div>
+					<div id="discards">Discards:</div>
+					<div id="deck">Deck:</div>
+					<div id="player">Player: 1 2 3 4 5 6 7 8 9 10 11 <button name="action" value="left">&lt;</button> <button name="action" value="right">&gt;</button> <button name="action" value="sort">Sort</button> Value:</div>
+					<div id="debug">Debug <textarea rows="10" cols="20" name="debugarea"/></div>
+				</form>
+			</div>
+			<div id="right">Right</div>
+		</div>
+		<div id="footer">Copyright Dan Rippel</div>
+	</div>
+</body>
+
+</html>

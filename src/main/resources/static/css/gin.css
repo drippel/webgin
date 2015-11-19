@@ -1,0 +1,26 @@
+#header {
+	text-align:center;
+}
+
+#left {
+	float: left;
+	width: 10%;
+}
+
+#right {
+	float: right;
+	width: 10%;
+}
+
+#center {
+    display: inline-block;
+	width: 80%;
+}
+
+#debug {
+	padding-top:5px;
+}
+
+#footer {
+	text-align:center;
+}
