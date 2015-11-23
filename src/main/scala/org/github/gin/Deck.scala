@@ -1,6 +1,7 @@
 package org.github.gin
 
 import scala.collection.mutable.ListBuffer
+import scala.util.Random
 
 class Deck {
   val cards = new ListBuffer[Card]
@@ -8,18 +9,47 @@ class Deck {
 
 object Deck {
 
-  def createStandardDeck() : Deck = {
+  val suits = List(Spades,Hearts,Diamonds,Clubs)
+  val ranks = List(Ace,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten,Jack,Queen,King)
 
-    val deck = new Deck()
+  def standard52CardDeck() : List[Card] = {
 
-    for( i <- 0 to 3 ){
-      for( j <- 0 to 12 ){
-        deck.cards += new Card(i,j)
+    val cards = new ListBuffer[Card]
+
+    for( s <- suits ){
+      for( r <- ranks ){
+        cards += new Card(s,r)
       }
     }
 
-    deck
+    cards.toList
 
+  }
+
+  def shuffle( cards : List[Card] ) : List[Card] = {
+
+    val r = new Random()
+
+    val src = new ListBuffer[Card]() ++= cards
+    val dest = new ListBuffer[Card]()
+
+    while( !src.isEmpty ){
+      dest += src.remove(r.nextInt(src.size))
+    }
+
+    dest.toList
+
+  }
+
+  def shuffle( cards : List[Card], times : Int ) : List[Card] = {
+
+    var shuffling = cards
+
+    for( i <- 0 to times ){
+      shuffling = shuffle(shuffling)
+    }
+
+    shuffling
   }
 
 }

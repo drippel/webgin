@@ -5,22 +5,45 @@
 <title>Web Gin 0.1</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <link rel="stylesheet" type="text/css" media="all" th:href="@{/css/gin.css}" href="../css/gin.css" />
+    <script src="../js/jquery-1.11.3.js" th:src="@{/js/jquery-1.11.3.js}"></script>
+    <script src="../js/jquery-ui.js" th:src="@{/js/jquery-ui.js}"></script>
+    <script src="../js/gin.js" th:src="@{/js/gin.js}"></script>
 </head>
 
-<body>
+<body onload="ginOnLoad()">
 	<div id="main">
-		<div id="header">Welcome to Web Gin 0.1</div>
+		<div id="header">&#x2660;  &#x2665; Welcome to Web Gin 0.1 &#x2666;  &#x2663; </div>
 		<div id="content">
 			<div id="left">Left</div>
 			<div id="center">
 				<form action="/gin" method="post">
 					<div id="menu"><button name="action" value="new">New</button> <button name="action" value="save">Save</button> <button name="action" value="quit">Quit</button> <button name="action" value="cheat">Cheat</button> <button name="action" value="undo">Undo</button> <button name="action" value="settings">Settings</button></div>
 					<div id="score">Score : Round Vs Player</div>
-					<div id="computer">Computer: 1 2 3 4 5 6 7 8 9 10 11 Action: Deck</div>
-					<div id="play"><button name="action" value="discard">C</button> <button name="action" value="deck">D</button></div>
+					<div id="computer">Computer:
+					   <span id="computercards" th:each="card : ${computerHand}" >
+					       <button name="card" value="$card" th:value="${card}">
+					           <div th:utext="${card}" >card</div>
+					       </button>
+					   </span>
+					   Action: Deck
+					</div>
+					<div id="play">
+					   <button name="action" value="discard"><span th:utext="${discardCard}">D</span></button>
+					   <button name="action" value="deck"><span th:utext="${stockCard}">D</span></button>
+					</div>
 					<div id="discards">Discards:</div>
 					<div id="deck">Deck:</div>
-					<div id="player">Player: 1 2 3 4 5 6 7 8 9 10 11 <button name="action" value="left">&lt;</button> <button name="action" value="right">&gt;</button> <button name="action" value="sort">Sort</button> Value:</div>
+					<div id="player">Player:
+					   <ul id="playerCards" th:each="card : ${playerHand}" >
+					       <li>
+					       <button name="card" value="${card}" th:value="${card}" ><span th:utext="${card}">card here</span></button>
+					       </li>
+					   </ul>
+					   <ul id="playerDiscards" >
+					       <li>Place Discard Here</li>
+					   </ul>
+					   <button name="action" value="sort">Sort</button> Value:
+					</div>
 					<div id="debug">Debug <textarea rows="10" cols="20" name="debugarea"/></div>
 				</form>
 			</div>

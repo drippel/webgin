@@ -7,6 +7,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 @Configuration
 @EnableAutoConfiguration
 @ComponentScan
-class WebTestConfig {
+class WebGinConfig {
 }
 

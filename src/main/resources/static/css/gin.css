@@ -24,3 +24,36 @@
 #footer {
 	text-align:center;
 }
+
+#player {
+}
+
+#playerCards {
+	list-style-type:none;
+}
+
+.hand {
+	list-style-type:none;
+}
+
+.hand li {
+	display: inline;
+	float: left;
+	padding-left: 3px;
+}
+
+#playerCards li {
+	display: inline;
+	float: left;
+	padding-left: 3px;
+}
+
+#playerDiscards {
+	list-style-type:none;
+}
+
+#playerDiscards li {
+	display: inline;
+	float: left;
+	padding-left: 3px;
+}
