@@ -8,41 +8,66 @@
     <script src="../js/jquery-1.11.3.js" th:src="@{/js/jquery-1.11.3.js}"></script>
     <script src="../js/jquery-ui.js" th:src="@{/js/jquery-ui.js}"></script>
     <script src="../js/gin.js" th:src="@{/js/gin.js}"></script>
+
+    <script>
+    $( function() {
+        $( "#playerCards" ).sortable().disableSelection();
+
+        $( "#ginForm" ).submit(
+        	function( event ) {
+			    // or return false
+			    // false;
+        	    // event.preventDefault();
+        	    var cardList = $("#playerCardList")
+        	    cardList.val("")
+
+        	    var lis = $("#playerCards li")
+        	    $.each( lis, function(index,l){
+        	    	var curr = cardList.val()
+        	    	curr = curr + "|" + $(l).text()
+        	    	cardList.val(curr)
+        	    })
+
+        	    console.log(cardList.val())
+        	    return true;
+	    });
+    });
+    </script>
 </head>
 
-<body onload="ginOnLoad()">
+<body>
 	<div id="main">
-		<div id="header">&#x2660;  &#x2665; Welcome to Web Gin 0.1 &#x2666;  &#x2663; </div>
+		<div id="header">&#x2660; <font color="red">&#x2665;</font> Welcome to Web Gin 0.1<font color="red">&#x2666;</font>  &#x2663; </div>
 		<div id="content">
 			<div id="left">Left</div>
 			<div id="center">
-				<form action="/gin" method="post">
+				<form id="ginForm" action="/gin" method="post">
 					<div id="menu"><button name="action" value="new">New</button> <button name="action" value="save">Save</button> <button name="action" value="quit">Quit</button> <button name="action" value="cheat">Cheat</button> <button name="action" value="undo">Undo</button> <button name="action" value="settings">Settings</button></div>
 					<div id="score">Score : Round Vs Player</div>
 					<div id="computer">Computer:
-					   <span id="computercards" th:each="card : ${computerHand}" >
-					       <button name="card" value="$card" th:value="${card}">
-					           <div th:utext="${card}" >card</div>
-					       </button>
-					   </span>
-					   Action: Deck
+					   <ul id="computerCards" >
+					       <li th:each="card : ${computerHand}" th:utext="${card}" >xx</li>
+					   </ul>
+					   Action: <span th:utext="${lastTake}">Deck</span><span th:utext="${lastCard}">Card</span>
+
 					</div>
 					<div id="play">
 					   <button name="action" value="discard"><span th:utext="${discardCard}">D</span></button>
-					   <button name="action" value="deck"><span th:utext="${stockCard}">D</span></button>
+					   <button name="action" value="stock"><span th:utext="${stockCard}">S</span></button>
 					</div>
 					<div id="discards">Discards:</div>
 					<div id="deck">Deck:</div>
-					<div id="player">Player:
-					   <ul id="playerCards" th:each="card : ${playerHand}" >
-					       <li>
-					       <button name="card" value="${card}" th:value="${card}" ><span th:utext="${card}">card here</span></button>
-					       </li>
+					<div id="player">Player (discard last):
+					   <input type="hidden" name="playerCardList" id="playerCardList" value="" />
+					   <font color="red" >
+					   <ul id="playerCards" class="playerConnected">
+					       <li class="ui-state-default" th:each="card : ${playerHand}" th:utext="${card}">xx</li>
 					   </ul>
-					   <ul id="playerDiscards" >
-					       <li>Place Discard Here</li>
-					   </ul>
-					   <button name="action" value="sort">Sort</button> Value:
+					   </font>
+					   <br/>
+					   <button name="action" value="drop">Discard</button>
+					   <button name="action" value="sort">Sort</button>
+					   Value:
 					</div>
 					<div id="debug">Debug <textarea rows="10" cols="20" name="debugarea"/></div>
 				</form>

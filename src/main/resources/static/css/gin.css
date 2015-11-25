@@ -28,32 +28,22 @@
 #player {
 }
 
-#playerCards {
+#computerCards {
 	list-style-type:none;
 }
 
-.hand {
-	list-style-type:none;
-}
-
-.hand li {
+#computerCards li {
 	display: inline;
 	float: left;
 	padding-left: 3px;
 }
 
-#playerCards li {
-	display: inline;
-	float: left;
-	padding-left: 3px;
-}
-
-#playerDiscards {
+#playerCards, #playerDiscards {
 	list-style-type:none;
 }
 
-#playerDiscards li {
-	display: inline;
+#playerCards li, #playerDiscards li {
+	display: inline-block;
 	float: left;
 	padding-left: 3px;
 }

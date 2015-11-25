@@ -24,6 +24,9 @@ object King extends Rank("E")
 
 object CardRenderer {
 
+  val suits = List(Spades,Hearts,Diamonds,Clubs)
+  val ranks = List(Ace,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten,Jack,Queen,King)
+
   def suitToUnicode( suit : Suit ) = {
 
     suit match {
@@ -34,6 +37,17 @@ object CardRenderer {
       case Clubs => { "&#x2663; " }
 
     }
+  }
+
+  def renderCard( card : Card ) : String = {
+
+    if( card.suit.equals(Spades) || card.suit.equals(Clubs) ){
+      "<font color='black'>" + cardToUnicode(card) + "</font>"
+    }
+    else{
+      "<font color='red'>" + cardToUnicode(card) + "</font>"
+    }
+
   }
 
   // outlined U+2664	U+2661	U+2662	U+2667
@@ -47,5 +61,42 @@ object CardRenderer {
   def redJoker() = { "&#x1F0BF" }
   def blackJoker() = { "&#x1F0CF" }
   def whiteJoker() = { "&#x1F0DF" }
+
+  def stringToCard( s : String ) : Card = {
+
+    var escape = unicodeEscape(s).reverse
+
+    var r = escape.head.toString
+
+    var rank = ranks.find( { k => k.value.equals(r) } )
+
+    escape = escape.tail
+
+    var t = escape.head.toString
+
+    var suit = suits.find( { k => k.value.equals(t) } )
+
+    new Card(suit.get, rank.get)
+
+  }
+
+   def unicodeEscape(s: String): String = {
+    val sb = new StringBuilder();
+    for (i <- 0 until s.length()) {
+      val c = s.charAt(i);
+      if ((c >> 7) > 0) {
+        sb.append("\\u");
+        sb.append(hexChar((c >> 12) & 0xF)); // append the hex character for the left-most 4-bits
+        sb.append(hexChar((c >> 8) & 0xF)); // hex for the second group of 4-bits from the left
+        sb.append(hexChar((c >> 4) & 0xF)); // hex for the third group
+        sb.append(hexChar(c & 0xF)); // hex for the last group, e.g., the right most 4-bits
+      } else {
+        sb.append(c);
+      }
+    }
+    return sb.toString();
+  }
+
+  def hexChar = List('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F');
 
 }

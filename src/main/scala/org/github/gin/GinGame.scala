@@ -13,7 +13,7 @@ class GinGame {
   var discard = List[Card]()
   var stock = List[Card]()
 
-  var lastAction : String = null
+  var lastAction: String = null
 
 }
 
@@ -24,15 +24,15 @@ object GinGame {
     game
   }
 
-  def startGame( game : GinGame ) = {
+  def startGame(game: GinGame) = {
 
     val deck = Deck.standard52CardDeck()
-    var shuffled = Deck.shuffle(deck,10)
+    var shuffled = Deck.shuffle(deck, 10)
 
     val p1 = new ListBuffer[Card]
     val p2 = new ListBuffer[Card]
 
-    for( i <- 1 to 10 ){
+    for (i <- 1 to 10) {
 
       p1 += shuffled.head
       shuffled = shuffled.tail
@@ -41,11 +41,10 @@ object GinGame {
 
     }
 
-    if( game.computerDeal ){
+    if (game.computerDeal) {
       game.playerHand = p1.toList
       game.computerHand = p2.toList
-    }
-    else {
+    } else {
       game.playerHand = p2.toList
       game.computerHand = p1.toList
     }
@@ -63,7 +62,7 @@ object GinGame {
 
   }
 
-  def discard( game : GinGame ) = {
+  def discard(game: GinGame) = {
 
     // take the first card off the discard stack
     // and give to a player
@@ -73,27 +72,80 @@ object GinGame {
 
         game.discard = game.discard.tail
 
-        if( game.playerTurn ){
+        if (game.playerTurn) {
           game.playerHand = game.playerHand ++ List(c)
-          game.lastAction = "take player"
-        }
-        else {
+          game.lastAction = "take discard player"
+        } else {
           game.computerHand = game.computerHand ++ List(c)
-          game.lastAction = "take computer"
+          game.lastAction = "take discard computer"
         }
 
       }
       case None => {
         // cant pick from discard
         // leave game alone
-        game.lastAction = "take fail"
+        game.lastAction = "take discard fail"
       }
     }
-
 
     game
 
   }
 
+  def removeFromHand(cards: List[Card], card: Card): List[Card] = {
+    cards.filterNot { c => { c.equals(card) } }
+  }
+
+  def discard(game: GinGame, card: Card ) = {
+
+    // which player has 11 cards?
+    if ( game.playerTurn ) {
+
+      game.playerHand = removeFromHand(game.playerHand, card)
+      game.discard = List(card) ++ game.discard
+      game.lastAction = "discard player"
+    } else if (game.computerHand.size == 11) {
+
+      game.computerHand = removeFromHand(game.computerHand, card)
+      game.discard = List(card) ++ game.discard
+      game.lastAction = "discard computer"
+    } else {
+      game.lastAction = "discard fail"
+    }
+
+    game.playerTurn = !game.playerTurn
+
+    game
+
+  }
+
+  def stock(game: GinGame) = {
+
+    // take the first card off the deck
+
+    game.stock.headOption match {
+
+      case Some(c) => {
+
+        if (game.playerTurn) {
+          game.playerHand = game.playerHand ++ List(c)
+          game.lastAction = "stock player"
+        } else {
+          game.computerHand = game.computerHand ++ List(c)
+          game.lastAction = "stock computer"
+        }
+
+      }
+      case _ => {
+
+        game.lastAction = "stock fail"
+      }
+
+    }
+
+    game.stock = game.stock.tail
+
+    game
+  }
 
 }

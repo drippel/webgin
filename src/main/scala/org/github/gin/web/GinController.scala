@@ -14,6 +14,8 @@ import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import org.github.gin.Card
 import org.github.gin.CardRenderer
+import org.github.gin.player.RandomPlayer
+import org.apache.commons.lang3.StringUtils
 
 
 @Scope("session")
@@ -26,17 +28,35 @@ class GinController {
 
   var game = GinGame.createGame()
 
+  var player = new RandomPlayer
+
+  var lastTake : String = ""
+  var lastCard : String = ""
+  var cheat = false
+
     @RequestMapping( method = Array( RequestMethod.GET ) )
     def welcome() =  { buildModelAndView() }
 
     @RequestMapping( method = Array( RequestMethod.POST ) )
-    def post( @RequestParam(required=true, value="action") action : String ) =  {
+    def post( @RequestParam(required=true, value="action") action : String,
+        @RequestParam(required=false,value="playerCardList" ) playerCardList : String ) =  {
 
+      if( StringUtils.isNotEmpty( playerCardList ) ){
+        sortPlayerHand(game,playerCardList)
+      }
 
       action match {
         case "new" => { newGame() }
         case "discard" => { discard() }
-        case _ => { Console.print("hmmm...") }
+        case "stock" => { stock() }
+        case "drop" => {
+          if( game.playerHand.size == 11 ){
+            drop(playerCardList)
+            computerTurn()
+          }
+        }
+        case "cheat" => { cheat = !cheat }
+        case _ => { Console.println(action) }
       }
 
       buildModelAndView();
@@ -49,14 +69,19 @@ class GinController {
     }
 
     def discard() = {
-      game = GinGame.discard(game)
+        game = GinGame.discard(game)
     }
 
     def buildModelAndView() = {
 
       val modelAndView = new ModelAndView("index")
       modelAndView.addObject("game",game)
-      modelAndView.addObject("computerHand", asJavaCollection(renderCards(game.computerHand)))
+      if( cheat ){
+        modelAndView.addObject("computerHand", asJavaCollection(renderCards(game.computerHand)))
+      }
+      else {
+        modelAndView.addObject("computerHand", asJavaCollection(renderCardsAsBacks(game.computerHand)))
+      }
       modelAndView.addObject("playerHand", asJavaCollection( renderCards(game.playerHand)))
       modelAndView.addObject("discard", asJavaCollection(renderCards(game.discard)))
       modelAndView.addObject("stock", asJavaCollection(renderCards(game.stock)))
@@ -66,19 +91,65 @@ class GinController {
         CardRenderer.whiteJoker()
       }
       else {
-        CardRenderer.cardToUnicode(game.discard.head)
+        // CardRenderer.cardToUnicode(game.discard.head)
+        CardRenderer.renderCard(game.discard.head)
       }
       modelAndView.addObject("discardCard", dcard)
       modelAndView.addObject("stockCard",  CardRenderer.cardBack())
+
+      modelAndView.addObject("lastTake", lastTake )
+      modelAndView.addObject("lastCard", lastCard )
 
       modelAndView
 
     }
 
     def renderCards( cards : List[Card] ) = {
+      // cards.map { c => CardRenderer.cardToUnicode(c) }
+      cards.map { c => CardRenderer.renderCard(c) }
+    }
 
-      cards.map { c => CardRenderer.cardToUnicode(c) }
+    def renderCardsAsBacks( cards : List[Card] ) = {
+      cards.map { c => CardRenderer.cardBack() }
+    }
+    def drop( cardList : String ) = {
+
+      val cards = toCards(cardList)
+
+      game = GinGame.discard(game, cards.last )
 
     }
+
+  def toCards(cardList: String) = {
+    val cards = cardList.split('|').filter( { s => {s.length() > 0 } } ).toList
+    cards.map { (c) => { CardRenderer.stringToCard(c) } }
+  }
+
+  def stock() = {
+    game = GinGame.stock(game)
+  }
+
+  def computerTurn() = {
+
+    // discard or stock
+    game = if( player.stock( game ) ){
+      //
+      lastTake = "discard"
+      lastCard = CardRenderer.cardToUnicode(game.discard.head)
+      GinGame.discard(game)
+    }
+    else {
+      lastTake = "stock"
+      lastCard = CardRenderer.cardBack()
+      GinGame.stock(game)
+    }
+
+    // drop
+    game = GinGame.discard(game, player.discard(game, true))
+  }
+
+  def sortPlayerHand(game: GinGame, playerCardList: String) = {
+    game.playerHand = toCards(playerCardList)
+  }
 }
 
