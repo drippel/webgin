@@ -37,18 +37,82 @@ object Hand {
 
     val sets = new ListBuffer[List[Card]]()
 
-    // group by suit
+    var source = cards.toList
 
-    val groups = cards.groupBy( (c) => { c.suit } )
+    while( !source.isEmpty ){
 
-    for( group <- groups if group._2.size > 2 ){
+      val run = findRunsFromCard( source, source.head, List[Card]() )
+      if( run.size > 2 ){
+        sets += run
+      }
 
-      // sort by rank
-      val sorted = group._2.sortBy( byRank )
+      source = source.filter( (c) => { !run.contains(c) })
 
     }
 
     sets.toList
+  }
+
+  def findRunsFromCard( cards : List[Card], card : Card, run : List[Card] ) : List[Card] = {
+
+    val accum = run ++ List(card)
+
+    nextCard(card) match {
+      case Some(n) => {
+        if( cards.contains(n) ){
+          findRunsFromCard( cards, n, accum )
+        }
+        else {
+          accum
+        }
+      }
+      case _ => {
+        accum
+      }
+    }
+  }
+
+  def nextCard( c : Card) : Option[Card] = {
+
+    val i = CardRenderer.ranks.indexOf(c.rank)
+
+    CardRenderer.ranks.lift(i+1) match {
+      case Some(r) => {
+        Some(new Card( c.suit, r ))
+      }
+      case None => {
+        None
+      }
+    }
+  }
+
+  def detectGin( cards : List[Card] ) : Boolean = {
+
+    var hand = cards.toList
+
+    val runs = findRuns(hand)
+
+    val inRuns = runs.flatten
+
+    hand = hand.filter( (c) => { !inRuns.contains(c) } )
+
+    val sets = findSets(hand)
+
+    val inSets = sets.flatten
+
+    hand = hand.filter( (c) => { !inSets.contains(c) } )
+
+    if( hand.isEmpty ){
+      true
+    }
+    else {
+      if( cards.size == 11 && hand.size == 1 ){
+        true
+      }
+      else {
+        false
+      }
+    }
   }
 
 

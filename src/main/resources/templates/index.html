@@ -51,6 +51,7 @@
 					   Action: <span th:utext="${lastTake}">Deck</span><span th:utext="${lastCard}">Card</span>
 
 					</div>
+					<div id="status" th:utext="${status}">status</div>
 					<div id="play">
 					   <button name="action" value="discard"><span th:utext="${discardCard}">D</span></button>
 					   <button name="action" value="stock"><span th:utext="${stockCard}">S</span></button>

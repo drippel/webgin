@@ -15,6 +15,8 @@ class GinGame {
 
   var lastAction: String = null
 
+  var finished = false
+
 }
 
 object GinGame {
@@ -146,6 +148,24 @@ object GinGame {
     game.stock = game.stock.tail
 
     game
+  }
+
+
+  def detectGin( game : GinGame, player : Boolean ) : Boolean = {
+
+    val gin = if( player ){
+      Hand.detectGin(game.playerHand)
+    }
+    else {
+      Hand.detectGin(game.computerHand)
+    }
+
+    if( gin ){
+      game.finished = true
+    }
+
+    gin
+
   }
 
 }

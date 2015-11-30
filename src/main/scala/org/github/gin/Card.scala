@@ -20,4 +20,8 @@ class Card( val suit : Suit, val rank : Rank ) {
 
   }
 
+  override def toString() : String = {
+    "[" + suit.value +"," + rank.value + "]"
+  }
+
 }
