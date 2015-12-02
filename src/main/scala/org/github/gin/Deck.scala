@@ -52,4 +52,11 @@ object Deck {
     shuffling
   }
 
+  def cardValue( card : Card ) : Int = {
+
+    val i = ranks.indexOf(card.rank) + 1
+
+    i.min(10)
+  }
+
 }

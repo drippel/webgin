@@ -38,42 +38,43 @@
 <body>
 	<div id="main">
 		<div id="header">&#x2660; <font color="red">&#x2665;</font> Welcome to Web Gin 0.1<font color="red">&#x2666;</font>  &#x2663; </div>
-		<div id="content">
-			<div id="left">Left</div>
+		<div id="content" >
+			<div id="left">&nbsp;</div>
 			<div id="center">
 				<form id="ginForm" action="/gin" method="post">
-					<div id="menu"><button name="action" value="new">New</button> <button name="action" value="save">Save</button> <button name="action" value="quit">Quit</button> <button name="action" value="cheat">Cheat</button> <button name="action" value="undo">Undo</button> <button name="action" value="settings">Settings</button></div>
+					<div id="menu" >
+					   <button name="action" value="new">New</button> <button name="action" value="save">Save</button> <button name="action" value="quit">Quit</button> <button name="action" value="cheat">Cheat</button> <button name="action" value="undo">Undo</button> <button name="action" value="settings">Settings</button>
+					</div>
 					<div id="score">Score : Round Vs Player</div>
-					<div id="computer">Computer:
+					<div id="computer" >Computer:
 					   <ul id="computerCards" >
 					       <li th:each="card : ${computerHand}" th:utext="${card}" >xx</li>
 					   </ul>
 					   Action: <span th:utext="${lastTake}">Deck</span><span th:utext="${lastCard}">Card</span>
-
 					</div>
 					<div id="status" th:utext="${status}">status</div>
-					<div id="play">
+					<div id="play" >
 					   <button name="action" value="discard"><span th:utext="${discardCard}">D</span></button>
 					   <button name="action" value="stock"><span th:utext="${stockCard}">S</span></button>
 					</div>
-					<div id="discards">Discards:</div>
-					<div id="deck">Deck:</div>
-					<div id="player">Player (discard last):
-					   <input type="hidden" name="playerCardList" id="playerCardList" value="" />
-					   <font color="red" >
-					   <ul id="playerCards" class="playerConnected">
+					<div th:if="${cheat}" >
+					    <div id="discards">Discards:<span th:utext="${discardCards}">D</span></div>
+					    <div id="deck">Deck:<span th:utext="${stockCards}">S</span></div>
+					</div>
+					<input type="hidden" name="playerCardList" id="playerCardList" value="" />
+					<div id="player" >Player (discard last):
+					   <ul id="playerCards" >
 					       <li class="ui-state-default" th:each="card : ${playerHand}" th:utext="${card}">xx</li>
 					   </ul>
-					   </font>
-					   <br/>
-					   <button name="action" value="drop">Discard</button>
-					   <button name="action" value="sort">Sort</button>
-					   Value:
+					   <span> Value:<span id="deadwood" th:utext="${deadwood}">000</span> </span>
 					</div>
-					<div id="debug">Debug <textarea rows="10" cols="20" name="debugarea"/></div>
+					<div id="playerActions" >
+					   <button name="action" value="drop">Discard</button>
+					   <button name="action" value="knock">Knock</button>
+					</div>
 				</form>
 			</div>
-			<div id="right">Right</div>
+			<div id="right">&nbsp;</div>
 		</div>
 		<div id="footer">Copyright Dan Rippel</div>
 	</div>

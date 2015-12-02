@@ -88,7 +88,7 @@ object Hand {
 
   def detectGin( cards : List[Card] ) : Boolean = {
 
-    var hand = cards.toList
+    var hand = sortCards(cards)
 
     val runs = findRuns(hand)
 
@@ -113,6 +113,28 @@ object Hand {
         false
       }
     }
+  }
+
+  def sortCards( cards : List[Card] ) : List[Card] = {
+    cards.toList.sortBy(bySuit).sortBy(byRank)
+  }
+
+  def findDeadwood( cards : List[Card] ) : List[Card] = {
+
+    val sorted = sortCards(cards)
+
+    val runs = findRuns(sorted)
+    val inRuns = runs.flatten
+    var notInRuns = sorted.filter( (c) => { !inRuns.contains(c)} )
+    val sets = findSets(notInRuns)
+    val inSets = sets.flatten
+    val remainder = notInRuns.filter( (c) => { !inSets.contains(c)} )
+
+    remainder
+  }
+
+  def countDeadwood( cards : List[Card] ) : Int = {
+    findDeadwood(cards).foldRight(0)( (c,i) => { i + Deck.cardValue(c) } )
   }
 
 

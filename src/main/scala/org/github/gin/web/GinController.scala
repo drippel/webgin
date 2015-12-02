@@ -16,6 +16,8 @@ import org.github.gin.Card
 import org.github.gin.CardRenderer
 import org.github.gin.player.RandomPlayer
 import org.apache.commons.lang3.StringUtils
+import org.github.gin.Hand
+import org.github.gin.Hand
 
 @Scope("session")
 @Controller
@@ -35,6 +37,8 @@ class GinController {
   var lastCard: String = ""
   var cheat = false
 
+  var openSettings = false
+
   @RequestMapping(method = Array(RequestMethod.GET))
   def welcome() = { buildModelAndView() }
 
@@ -46,73 +50,108 @@ class GinController {
       sortPlayerHand(game, playerCardList)
     }
 
+    openSettings = false
+
     action match {
       case "new" => { newGame() }
       case "discard" => { discard() }
       case "stock" => { stock() }
-      case "drop" => {
-        if (game.playerHand.size == 11) {
-          drop(playerCardList)
-          if (checkForGin(true)) {
-            // notification
-            status = "You Win!!!!!!"
-          } else {
-            computerTurn()
-            if( checkForGin(false) ){
-              // notification
-              status = "You Lose!!!!!!"
-            }
-            else {
-              status = "Your pick"
-            }
-          }
-        }
-      }
+      case "drop" => { drop(playerCardList) }
       case "cheat" => { cheat = !cheat }
+      case "settings" => { settings() }
+      case "undo" => { undo() }
       case _ => { Console.println(action) }
     }
 
     buildModelAndView();
   }
 
+  def settings() = {
+    openSettings = true
+  }
+
+  def drop(playerCardList: String): Unit = {
+    if (game.playerHand.size == 11) {
+      dropCard(playerCardList)
+      if (checkForGin(true)) {
+        // notification
+        status = "You Win!!!!!!"
+      } else {
+        computerTurn()
+        if (checkForGin(false)) {
+          // notification
+          status = "You Lose!!!!!!"
+        } else {
+          status = "Your pick"
+        }
+      }
+    }
+  }
+
   def newGame() = {
     game = GinGame.startGame(game)
+    GinGame.sortHand(game,true)
+    GinGame.sortHand(game,false)
     status = "New Game"
   }
 
   def discard() = {
     game = GinGame.discard(game)
-    status = "Your Discard"
+    if( checkForGin(true) ){
+        status = "You Win!!!!!!"
+    }
+    else {
+      status = "Your Discard"
+    }
   }
 
   def buildModelAndView() = {
 
-    val modelAndView = new ModelAndView("index")
-    modelAndView.addObject("game", game)
-    if (cheat) {
-      modelAndView.addObject("computerHand", asJavaCollection(renderCards(game.computerHand)))
+    if (!openSettings) {
+
+      val modelAndView = new ModelAndView("index")
+      modelAndView.addObject("game", game)
+
+      if (cheat) {
+        modelAndView.addObject("computerHand", asJavaCollection(renderCards(game.computerHand)))
+      } else {
+        modelAndView.addObject("computerHand", asJavaCollection(renderCardsAsBacks(game.computerHand)))
+      }
+      modelAndView.addObject("playerHand", asJavaCollection(renderCards(game.playerHand)))
+      modelAndView.addObject("discard", asJavaCollection(renderCards(game.discard)))
+      modelAndView.addObject("stock", asJavaCollection(renderCards(game.stock)))
+
+      val dcard = if (game.discard.isEmpty) {
+        CardRenderer.whiteJoker()
+      } else {
+        // CardRenderer.cardToUnicode(game.discard.head)
+        CardRenderer.renderCard(game.discard.head)
+      }
+
+      modelAndView.addObject("discardCard", dcard)
+      modelAndView.addObject("stockCard", CardRenderer.cardBack())
+
+      modelAndView.addObject("lastTake", lastTake)
+      modelAndView.addObject("lastCard", lastCard)
+
+      modelAndView.addObject("status", status)
+      modelAndView.addObject("cheat", cheat)
+
+      modelAndView.addObject("deadwood", Hand.countDeadwood(game.playerHand))
+
+      if( cheat ){
+        modelAndView.addObject("discardCards", asJavaCollection(renderCards(game.discard)))
+        modelAndView.addObject("stockCards",   asJavaCollection(renderCards(game.stock)))
+      }
+
+      modelAndView
+
     } else {
-      modelAndView.addObject("computerHand", asJavaCollection(renderCardsAsBacks(game.computerHand)))
+
+      openSettings = false
+      val modelAndView = new ModelAndView("settings")
+      modelAndView
     }
-    modelAndView.addObject("playerHand", asJavaCollection(renderCards(game.playerHand)))
-    modelAndView.addObject("discard", asJavaCollection(renderCards(game.discard)))
-    modelAndView.addObject("stock", asJavaCollection(renderCards(game.stock)))
-
-    val dcard = if (game.discard.isEmpty) {
-      CardRenderer.whiteJoker()
-    } else {
-      // CardRenderer.cardToUnicode(game.discard.head)
-      CardRenderer.renderCard(game.discard.head)
-    }
-    modelAndView.addObject("discardCard", dcard)
-    modelAndView.addObject("stockCard", CardRenderer.cardBack())
-
-    modelAndView.addObject("lastTake", lastTake)
-    modelAndView.addObject("lastCard", lastCard)
-
-    modelAndView.addObject("status",status)
-
-    modelAndView
 
   }
 
@@ -124,10 +163,10 @@ class GinController {
   def renderCardsAsBacks(cards: List[Card]) = {
     cards.map { c => CardRenderer.cardBack() }
   }
-  def drop(cardList: String) = {
+
+  def dropCard(cardList: String) = {
 
     val cards = toCards(cardList)
-
     game = GinGame.discard(game, cards.last)
 
   }
@@ -139,7 +178,12 @@ class GinController {
 
   def stock() = {
     game = GinGame.stock(game)
-    status = "Your Discard"
+    if( checkForGin(true) ){
+      status = "You win!!!"
+    }
+    else {
+      status = "Your Discard"
+    }
   }
 
   def computerTurn() = {
@@ -148,7 +192,7 @@ class GinController {
     game = if (player.stock(game)) {
       //
       lastTake = "discard"
-      lastCard = CardRenderer.cardToUnicode(game.discard.head)
+      lastCard = CardRenderer.renderCard(game.discard.head)
       GinGame.discard(game)
     } else {
       lastTake = "stock"
@@ -164,8 +208,30 @@ class GinController {
     game.playerHand = toCards(playerCardList)
   }
 
-  def checkForGin( player : Boolean ) : Boolean = {
-    GinGame.detectGin(game,player)
+  def checkForGin(player: Boolean): Boolean = {
+    GinGame.detectGin(game, player)
+  }
+
+  def undo() : Unit = {
+
+    var games = GinGame.toList(game)
+
+    // take off head
+    games = games.tail
+
+    val prev = games.find( (g) => { g.playerTurn } )
+
+    game = prev match {
+      case Some(g) => {
+        g
+      }
+      case _ => {
+        game
+      }
+    }
+
+    game.next = None
+
   }
 }
 

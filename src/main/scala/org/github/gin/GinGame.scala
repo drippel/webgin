@@ -6,6 +6,9 @@ class GinGame {
 
   var computerDeal = true
   var playerTurn = true
+  var finished = false
+
+  var lastAction: String = null
 
   var computerHand = List[Card]()
   var playerHand = List[Card]()
@@ -13,13 +16,33 @@ class GinGame {
   var discard = List[Card]()
   var stock = List[Card]()
 
-  var lastAction: String = null
-
-  var finished = false
+  var prev : Option[GinGame] = None
+  var next : Option[GinGame] = None
 
 }
 
 object GinGame {
+
+  def link( g1 : GinGame, g2 : GinGame ) = {
+    g1.next = Some(g2)
+    g2.prev = Some(g1)
+  }
+
+  def clone( src : GinGame ) : GinGame = {
+
+    val dest = new GinGame()
+
+    dest.computerDeal = src.computerDeal
+    dest.playerTurn = src.playerTurn
+    dest.finished = src.finished
+    dest.lastAction = src.lastAction
+    dest.computerHand = src.computerHand.toList
+    dest.playerHand = src.playerHand.toList
+    dest.discard = src.discard.toList
+    dest.stock = src.stock.toList
+
+    dest
+  }
 
   def createGame() = {
     val game = new GinGame()
@@ -66,31 +89,35 @@ object GinGame {
 
   def discard(game: GinGame) = {
 
+    val next = clone(game)
+
+    link(game,next)
+
     // take the first card off the discard stack
     // and give to a player
 
-    game.discard.headOption match {
+    next.discard.headOption match {
       case Some(c) => {
 
-        game.discard = game.discard.tail
+        next.discard = next.discard.tail
 
-        if (game.playerTurn) {
-          game.playerHand = game.playerHand ++ List(c)
-          game.lastAction = "take discard player"
+        if (next.playerTurn) {
+          next.playerHand = next.playerHand ++ List(c)
+          next.lastAction = "take discard player"
         } else {
-          game.computerHand = game.computerHand ++ List(c)
-          game.lastAction = "take discard computer"
+          next.computerHand = next.computerHand ++ List(c)
+          next.lastAction = "take discard computer"
         }
 
       }
       case None => {
         // cant pick from discard
         // leave game alone
-        game.lastAction = "take discard fail"
+        next.lastAction = "take discard fail"
       }
     }
 
-    game
+    next
 
   }
 
@@ -100,54 +127,63 @@ object GinGame {
 
   def discard(game: GinGame, card: Card ) = {
 
+    val next = clone(game)
+
+    link(game,next)
+
     // which player has 11 cards?
-    if ( game.playerTurn ) {
+    if ( next.playerTurn ) {
 
-      game.playerHand = removeFromHand(game.playerHand, card)
-      game.discard = List(card) ++ game.discard
-      game.lastAction = "discard player"
-    } else if (game.computerHand.size == 11) {
+      next.playerHand = removeFromHand(next.playerHand, card)
+      next.discard = List(card) ++ next.discard
+      next.lastAction = "discard player"
+    } else if (next.computerHand.size == 11) {
 
-      game.computerHand = removeFromHand(game.computerHand, card)
-      game.discard = List(card) ++ game.discard
-      game.lastAction = "discard computer"
+      next.computerHand = removeFromHand(next.computerHand, card)
+      next.discard = List(card) ++ next.discard
+      next.lastAction = "discard computer"
     } else {
-      game.lastAction = "discard fail"
+      next.lastAction = "discard fail"
     }
 
-    game.playerTurn = !game.playerTurn
+    next.playerTurn = !next.playerTurn
 
-    game
+    next
 
   }
 
   def stock(game: GinGame) = {
 
+    val next = clone(game)
+
+    link(game,next)
+
     // take the first card off the deck
 
-    game.stock.headOption match {
+    next.stock.headOption match {
 
       case Some(c) => {
 
-        if (game.playerTurn) {
-          game.playerHand = game.playerHand ++ List(c)
-          game.lastAction = "stock player"
+        if (next.playerTurn) {
+          next.playerHand = next.playerHand ++ List(c)
+          next.lastAction = "stock player"
         } else {
-          game.computerHand = game.computerHand ++ List(c)
-          game.lastAction = "stock computer"
+          next.computerHand = next.computerHand ++ List(c)
+          next.lastAction = "stock computer"
         }
 
       }
       case _ => {
 
-        game.lastAction = "stock fail"
+        next.lastAction = "stock fail"
       }
 
     }
 
-    game.stock = game.stock.tail
+    next.stock = next.stock.tail
 
-    game
+    next
+
   }
 
 
@@ -165,6 +201,35 @@ object GinGame {
     }
 
     gin
+
+  }
+
+  def sortHand( game : GinGame, player : Boolean ) : Unit = {
+
+    if(player){
+      game.playerHand = Hand.sortCards(game.playerHand)
+    }
+    else {
+      game.computerHand = Hand.sortCards(game.computerHand)
+    }
+
+  }
+
+  // returns a list of games from game through prev to the start
+  def toList( game : GinGame ) : List[GinGame] = {
+    addGame( game, List[GinGame]() )
+  }
+
+  def addGame( game : GinGame, accum : List[GinGame] ) : List[GinGame] = {
+
+    val games = accum ++ List(game)
+
+    game.prev match {
+      case Some(g) => {
+        addGame( g, games )
+      }
+      case _ => { games }
+    }
 
   }
 

@@ -271,4 +271,29 @@ class HandTest {
     assertFalse( "should not be gin", Hand.detectGin(cards))
 
   }
+
+  @Test
+  def test_detect_gin_6() = {
+
+    val c1 = new Card(Hearts,Two)
+    val c2 = new Card(Spades,Two)
+    val c3 = new Card(Clubs,Two)
+
+    val c4 = new Card(Diamonds,Three)
+    val c5 = new Card(Diamonds,Four)
+    val c6 = new Card(Diamonds,Five)
+
+    val c7 = new Card(Spades,Seven)
+    val c8 = new Card(Spades,Eight)
+    val c9 = new Card(Spades,Nine)
+    val c10 = new Card(Spades,Ten)
+
+    val c11 = new Card(Hearts,King)
+
+
+    val cards = List(c1,c2,c3,c4,c5,c6,c8,c9,c10,c11,c7)
+
+    assertTrue( "should be gin", Hand.detectGin(cards))
+
+  }
 }
