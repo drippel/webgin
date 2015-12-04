@@ -24,4 +24,8 @@ class Card( val suit : Suit, val rank : Rank ) {
     "[" + suit.value +"," + rank.value + "]"
   }
 
+  override def hashCode() : Int = {
+    ( suit.value + rank.value ).hashCode()
+  }
+
 }

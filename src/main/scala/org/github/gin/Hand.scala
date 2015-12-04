@@ -12,6 +12,27 @@ object Hand {
     CardRenderer.suits.indexOf(a.suit)
   }
 
+
+  def findPairs( cards : List[Card] ) : List[List[Card]] = {
+
+    val sets = new ListBuffer[List[Card]]()
+
+    for( card <- cards ){
+
+      val (l1,l2) = cards.partition( (c) => { card.rank.equals(c.rank) } )
+
+      if( !l1.isEmpty && l1.size > 1 ){
+
+        if( !sets.flatten.contains(card) ){
+          sets += l1
+        }
+      }
+    }
+
+
+    sets.toList
+  }
+
   def findSets( cards : List[Card] ) : List[List[Card]] = {
 
     //
@@ -33,25 +54,7 @@ object Hand {
     sets.toList
   }
 
-  def findRuns( cards : List[Card] ) : List[List[Card]] = {
-
-    val sets = new ListBuffer[List[Card]]()
-
-    var source = cards.toList
-
-    while( !source.isEmpty ){
-
-      val run = findRunsFromCard( source, source.head, List[Card]() )
-      if( run.size > 2 ){
-        sets += run
-      }
-
-      source = source.filter( (c) => { !run.contains(c) })
-
-    }
-
-    sets.toList
-  }
+  def findRuns = findRelated(2)(_)
 
   def findRunsFromCard( cards : List[Card], card : Card, run : List[Card] ) : List[Card] = {
 
@@ -72,11 +75,11 @@ object Hand {
     }
   }
 
-  def nextCard( c : Card) : Option[Card] = {
+  def neighboringCard( dir : Int )( c : Card) : Option[Card] = {
 
     val i = CardRenderer.ranks.indexOf(c.rank)
 
-    CardRenderer.ranks.lift(i+1) match {
+    CardRenderer.ranks.lift(i+dir) match {
       case Some(r) => {
         Some(new Card( c.suit, r ))
       }
@@ -85,6 +88,10 @@ object Hand {
       }
     }
   }
+
+  def nextCard = neighboringCard(1)(_)
+
+  def prevCard = neighboringCard(-1)(_)
 
   def detectGin( cards : List[Card] ) : Boolean = {
 
@@ -137,5 +144,45 @@ object Hand {
     findDeadwood(cards).foldRight(0)( (c,i) => { i + Deck.cardValue(c) } )
   }
 
+  def findRelated( limit : Int )(cards: List[Card]) : List[List[Card]] = {
+
+    val sets = new ListBuffer[List[Card]]()
+
+    var source = cards.toList
+
+    while( !source.isEmpty ){
+
+      val run = findRunsFromCard( source, source.head, List[Card]() )
+      if( run.size > limit ){
+        sets += run
+      }
+
+      source = source.filter( (c) => { !run.contains(c) })
+
+    }
+
+    sets.toList
+
+  }
+  // the assumption here is that the incoming list has already been
+  // filtered down to deadwood
+  def findNeighbors = findRelated(1)(_)
+
+  def extendsRun( run : List[Card], card : Card ) : Boolean = {
+
+    var found = prevCard(run.head) match {
+      case Some(c) => { card.equals(c)}
+      case _ => { false }
+    }
+
+    if( !found ){
+      found = nextCard(run.last) match {
+        case Some(c) => { card.equals(c)}
+        case _ => { false }
+      }
+    }
+
+    found
+  }
 
 }

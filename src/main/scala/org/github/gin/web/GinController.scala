@@ -18,6 +18,8 @@ import org.github.gin.player.RandomPlayer
 import org.apache.commons.lang3.StringUtils
 import org.github.gin.Hand
 import org.github.gin.Hand
+import org.github.gin.player.SetMaker
+import org.github.gin.player.RunMaker
 
 @Scope("session")
 @Controller
@@ -31,7 +33,7 @@ class GinController {
 
   var status = ""
 
-  var player = new RandomPlayer
+  var player = new RunMaker()
 
   var lastTake: String = ""
   var lastCard: String = ""
@@ -89,7 +91,7 @@ class GinController {
   }
 
   def newGame() = {
-    game = GinGame.startGame(game)
+    game = GinGame.deal(game)
     GinGame.sortHand(game,true)
     GinGame.sortHand(game,false)
     status = "New Game"
@@ -167,7 +169,7 @@ class GinController {
   def dropCard(cardList: String) = {
 
     val cards = toCards(cardList)
-    game = GinGame.discard(game, cards.last)
+    game = GinGame.drop(game, cards.last)
 
   }
 
@@ -190,18 +192,24 @@ class GinController {
 
     // discard or stock
     game = if (player.stock(game)) {
+      lastTake = "stock"
+      lastCard = CardRenderer.cardBack()
+      GinGame.stock(game)
+    } else {
       //
       lastTake = "discard"
       lastCard = CardRenderer.renderCard(game.discard.head)
       GinGame.discard(game)
-    } else {
-      lastTake = "stock"
-      lastCard = CardRenderer.cardBack()
-      GinGame.stock(game)
+    }
+
+    if( !checkForGin(false) ){
+      game = GinGame.drop(game, player.discard(game))
+    }
+    else {
+      game
     }
 
     // drop
-    game = GinGame.discard(game, player.discard(game, true))
   }
 
   def sortPlayerHand(game: GinGame, playerCardList: String) = {
