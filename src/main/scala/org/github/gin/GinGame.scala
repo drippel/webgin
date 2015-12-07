@@ -95,7 +95,7 @@ object GinGame {
         val next = clone(game)
         link(game, next)
 
-        next.play = new Discard(next.playerTurn,c)
+        next.play = new Discard(next.playerTurn, c)
         next.discard = next.discard.tail
 
         if (next.playerTurn) {
@@ -125,7 +125,7 @@ object GinGame {
     val next = clone(game)
     link(game, next)
 
-    next.play = new Drop(next.playerTurn,card)
+    next.play = new Drop(next.playerTurn, card)
 
     if (next.playerTurn) {
       next.playerHand = removeFromHand(next.playerHand, card)
@@ -143,7 +143,6 @@ object GinGame {
 
   def stock(game: GinGame) = {
 
-
     // take the first card off the deck
     game.stock.headOption match {
 
@@ -152,7 +151,7 @@ object GinGame {
         val next = clone(game)
         link(game, next)
 
-        next.play = new Stock(next.playerTurn,c)
+        next.play = new Stock(next.playerTurn, c)
 
         if (next.playerTurn) {
           next.playerHand = next.playerHand ++ List(c)
@@ -212,39 +211,53 @@ object GinGame {
 
   }
 
-  def detectEnd(game: GinGame) = {
+  def detectDraw(game: GinGame) = {
     game.stock.size <= 2
   }
 
+  def draw(game: GinGame) = {
 
-  def gin( game : GinGame ) : GinGame = {
-
-    // make sure somebody has gin?
-    if( Hand.detectGin(game.playerHand) || Hand.detectGin(game.computerHand) ){
+    if (detectDraw(game)) {
 
       val next = clone(game)
-      link(game,next)
+      link(game, next)
+
+      next.play = new Draw(next.playerTurn)
+      next.playerTurn = !next.playerTurn
+
+      next
+    } else {
+      game
+    }
+  }
+
+  def gin(game: GinGame): GinGame = {
+
+    // make sure somebody has gin?
+    if (Hand.detectGin(game.playerHand) || Hand.detectGin(game.computerHand)) {
+
+      val next = clone(game)
+      link(game, next)
 
       next.play = new Gin(next.playerTurn)
       next.playerTurn = !next.playerTurn
 
       next
 
-    }
-    else {
+    } else {
       game
     }
 
   }
 
-  def knock( game : GinGame, computer : Boolean ) : GinGame = {
+  def knock(game: GinGame, computer: Boolean): GinGame = {
 
-      val next = clone(game)
-      link(game,next)
+    val next = clone(game)
+    link(game, next)
 
-      next.play = new Knock(next.playerTurn)
-      next.playerTurn = !next.playerTurn
-      next
+    next.play = new Knock(next.playerTurn)
+    next.playerTurn = !next.playerTurn
+    next
 
   }
 }

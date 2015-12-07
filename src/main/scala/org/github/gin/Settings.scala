@@ -2,12 +2,18 @@ package org.github.gin
 
 class Settings {
 
-  var allowKnock = false
+  var allowKnock = true
+
+  var alternateDeal = false
+
+  // use a pass rule or deal 11 to first player
+  var initialPass = true
+
   var undercutBonus = 10
   var ginBonus = 20
   var bigGinBonus = 30
 
-  var gameBonus = 100
+  var matchBonus = 100
   var lineBonus = 25
   var shutoutBonus = 100
 
@@ -17,5 +23,5 @@ class Settings {
   var doubleHand = false
 
   var matchScoreGoal = 100
-  var multiMatchScoreGoal = 500
+  var gameScoreGoal = 500
 }

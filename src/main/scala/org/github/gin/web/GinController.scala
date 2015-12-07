@@ -20,6 +20,9 @@ import org.github.gin.Hand
 import org.github.gin.Hand
 import org.github.gin.player.SetMaker
 import org.github.gin.player.RunMaker
+import org.github.gin.Gin
+import org.github.gin.Draw
+import org.github.gin.Knock
 
 @Scope("session")
 @Controller
@@ -62,6 +65,8 @@ class GinController {
       case "cheat" => { cheat = !cheat }
       case "settings" => { settings() }
       case "undo" => { undo() }
+      case "knock" => { knock() }
+      case "next" => { nextGame() }
       case _ => { Console.println(action) }
     }
 
@@ -140,11 +145,14 @@ class GinController {
       modelAndView.addObject("cheat", cheat)
 
       modelAndView.addObject("deadwood", Hand.countDeadwood(game.playerHand))
+      modelAndView.addObject("canKnock", Hand.countDeadwood(game.playerHand) <= 10 )
 
       if( cheat ){
         modelAndView.addObject("discardCards", asJavaCollection(renderCards(game.discard)))
         modelAndView.addObject("stockCards",   asJavaCollection(renderCards(game.stock)))
       }
+
+      modelAndView.addObject("gameOver", gameOver(game) )
 
       modelAndView
 
@@ -155,6 +163,15 @@ class GinController {
       modelAndView
     }
 
+  }
+
+  def gameOver( game : GinGame ) : Boolean = {
+    game.play match {
+      case g : Gin => { true }
+      case d : Draw => { true }
+      case k : Knock => { true }
+      case _ => { false }
+    }
   }
 
   def renderCards(cards: List[Card]) = {
@@ -239,6 +256,19 @@ class GinController {
     }
 
     game.next = None
+
+  }
+
+  def knock() : Unit = {
+
+    // make sure the user can knock
+    if( Hand.countDeadwood(game.playerHand) <= 10 ){
+      game = GinGame.knock(game, false)
+    }
+
+  }
+
+  def nextGame() = {
 
   }
 }
