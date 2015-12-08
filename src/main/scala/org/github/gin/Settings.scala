@@ -1,27 +1,23 @@
 package org.github.gin
 
-class Settings {
+class Settings (
+  val allowKnock : Boolean = true,
+  val alternateDeal : Boolean = false,
+  val initialPass : Boolean = true,
+  val undercutBonus : Int = 10,
+  val ginBonus : Int = 20,
+  val bigGinBonus : Int = 30,
+  val matchBonus : Int = 100,
+  val lineBonus : Int = 25,
+  val shutoutBonus : Int = 100,
+  val mahjongGin : Boolean =false,
+  val knockPoint  : Int = 10,
+  val doubleHand : Boolean = false,
+  val matchScoreGoal  : Int = 100,
+  val gameScoreGoal  : Int = 500
+)
 
-  var allowKnock = true
+object Settings {
 
-  var alternateDeal = false
-
-  // use a pass rule or deal 11 to first player
-  var initialPass = true
-
-  var undercutBonus = 10
-  var ginBonus = 20
-  var bigGinBonus = 30
-
-  var matchBonus = 100
-  var lineBonus = 25
-  var shutoutBonus = 100
-
-  var mahjongGin=false
-
-  var knockPoint = 10
-  var doubleHand = false
-
-  var matchScoreGoal = 100
-  var gameScoreGoal = 500
+  def default() = { new Settings() }
 }

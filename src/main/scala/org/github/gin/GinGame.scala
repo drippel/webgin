@@ -2,54 +2,22 @@ package org.github.gin
 
 import scala.collection.mutable.ListBuffer
 
-class GinGame {
-
-  var playerTurn = false
-
-  var computerHand = List[Card]()
-  var playerHand = List[Card]()
-
-  var discard = List[Card]()
-  var stock = List[Card]()
-
-  var prev: Option[GinGame] = None
-  var next: Option[GinGame] = None
-
-  var play: Play = new Start()
-
-}
+class GinGame(
+  val playerTurn: Boolean = false,
+  val computerHand: List[Card] = List[Card](),
+  val playerHand: List[Card] = List[Card](),
+  val discard: List[Card] = List[Card](),
+  val stock: List[Card] = List[Card](),
+  val prev: Option[GinGame] = None,
+  val play: Play = new Start())
 
 object GinGame {
-
-  def link(g1: GinGame, g2: GinGame) = {
-    g1.next = Some(g2)
-    g2.prev = Some(g1)
-  }
-
-  def clone(src: GinGame): GinGame = {
-
-    val dest = new GinGame()
-
-    dest.playerTurn = src.playerTurn
-    dest.computerHand = src.computerHand.toList
-    dest.playerHand = src.playerHand.toList
-    dest.discard = src.discard.toList
-    dest.stock = src.stock.toList
-    dest.play = src.play
-
-    dest
-  }
 
   def createGame() = {
     new GinGame()
   }
 
   def deal(game: GinGame) = {
-
-    val next = clone(game)
-    link(game, next)
-
-    next.play = new Deal(next.playerTurn)
 
     val deck = Deck.standard52CardDeck()
     var shuffled = Deck.shuffle(deck, 100)
@@ -66,50 +34,45 @@ object GinGame {
 
     }
 
-    if (next.playerTurn) {
-      next.computerHand = p1.toList
-      next.playerHand = p2.toList
+    val hands = if (game.playerTurn) {
+      (p1.toList, p2.toList)
     } else {
-      next.playerHand = p1.toList
-      next.computerHand = p2.toList
+      (p2.toList, p1.toList)
     }
 
-    next.discard = List(shuffled.head)
-
-    next.stock = shuffled.tail
-
-    next.playerTurn = !next.playerTurn
-
-    next
+    new GinGame(
+      !game.playerTurn,
+      hands._1,
+      hands._2,
+      List(shuffled.head),
+      shuffled.tail,
+      Some(game),
+      new Deal(game.playerTurn))
 
   }
 
   def discard(game: GinGame) = {
 
-    // take the first card off the discard stack
-    // and give to a player
-
     game.discard.headOption match {
       case Some(c) => {
 
-        val next = clone(game)
-        link(game, next)
-
-        next.play = new Discard(next.playerTurn, c)
-        next.discard = next.discard.tail
-
-        if (next.playerTurn) {
-          next.playerHand = next.playerHand ++ List(c)
+        val hands = if (game.playerTurn) {
+          (game.playerHand ++ List(c), game.computerHand.toList)
         } else {
-          next.computerHand = next.computerHand ++ List(c)
+          (game.playerHand.toList, game.computerHand ++ List(c))
         }
 
-        next
+        new GinGame(
+          game.playerTurn,
+          hands._2,
+          hands._1,
+          game.discard.tail,
+          game.stock.toList,
+          Some(game),
+          new Discard(game.playerTurn, c))
 
       }
       case None => {
-        // cant pick from discard
-        // leave game alone
         game
       }
     }
@@ -122,22 +85,20 @@ object GinGame {
 
   def drop(game: GinGame, card: Card) = {
 
-    val next = clone(game)
-    link(game, next)
-
-    next.play = new Drop(next.playerTurn, card)
-
-    if (next.playerTurn) {
-      next.playerHand = removeFromHand(next.playerHand, card)
+    val hands = if (game.playerTurn) {
+      (removeFromHand(game.playerHand, card), game.computerHand)
     } else {
-      next.computerHand = removeFromHand(next.computerHand, card)
+      (game.playerHand, removeFromHand(game.computerHand, card))
     }
 
-    next.discard = List(card) ++ next.discard
-
-    next.playerTurn = !next.playerTurn
-
-    next
+    new GinGame(
+      !game.playerTurn,
+      hands._2,
+      hands._1,
+      (List(card) ++ game.discard),
+      game.stock.toList,
+      Some(game),
+      new Drop(game.playerTurn, card))
 
   }
 
@@ -148,20 +109,21 @@ object GinGame {
 
       case Some(c) => {
 
-        val next = clone(game)
-        link(game, next)
-
-        next.play = new Stock(next.playerTurn, c)
-
-        if (next.playerTurn) {
-          next.playerHand = next.playerHand ++ List(c)
+        val hands = if (game.playerTurn) {
+          (game.playerHand ++ List(c), game.computerHand)
         } else {
-          next.computerHand = next.computerHand ++ List(c)
+          (game.playerHand, game.computerHand ++ List(c))
         }
 
-        next.stock = next.stock.tail
+        new GinGame(
+          game.playerTurn,
+          hands._2,
+          hands._1,
+          game.discard.toList,
+          game.stock.tail,
+          Some(game),
+          new Stock(game.playerTurn, c))
 
-        next
       }
       case _ => {
         game
@@ -172,24 +134,29 @@ object GinGame {
   }
 
   def detectGin(game: GinGame, player: Boolean): Boolean = {
-
-    val gin = if (player) {
+    if (player) {
       Hand.detectGin(game.playerHand)
     } else {
       Hand.detectGin(game.computerHand)
     }
-
-    gin
-
   }
 
-  def sortHand(game: GinGame, player: Boolean): Unit = {
+  def sortHand(game: GinGame, player: Boolean): GinGame = {
 
-    if (player) {
-      game.playerHand = Hand.sortCards(game.playerHand)
+    val hands = if (player) {
+      (Hand.sortCards(game.playerHand), game.computerHand.toList)
     } else {
-      game.computerHand = Hand.sortCards(game.computerHand)
+      (game.playerHand.toList, Hand.sortCards(game.computerHand))
     }
+
+    new GinGame(
+      game.playerTurn,
+      hands._2,
+      hands._1,
+      game.discard.toList,
+      game.stock.toList,
+      Some(game),
+      new Sort(game.playerTurn))
 
   }
 
@@ -219,13 +186,14 @@ object GinGame {
 
     if (detectDraw(game)) {
 
-      val next = clone(game)
-      link(game, next)
-
-      next.play = new Draw(next.playerTurn)
-      next.playerTurn = !next.playerTurn
-
-      next
+      new GinGame(
+        !game.playerTurn,
+        game.computerHand.toList,
+        game.playerHand.toList,
+        game.discard.toList,
+        game.stock.toList,
+        Some(game),
+        new Draw(game.playerTurn))
     } else {
       game
     }
@@ -236,13 +204,14 @@ object GinGame {
     // make sure somebody has gin?
     if (Hand.detectGin(game.playerHand) || Hand.detectGin(game.computerHand)) {
 
-      val next = clone(game)
-      link(game, next)
-
-      next.play = new Gin(next.playerTurn)
-      next.playerTurn = !next.playerTurn
-
-      next
+      new GinGame(
+        !game.playerTurn,
+        game.computerHand.toList,
+        game.playerHand.toList,
+        game.discard.toList,
+        game.stock.toList,
+        Some(game),
+        new Gin(game.playerTurn))
 
     } else {
       game
@@ -252,12 +221,37 @@ object GinGame {
 
   def knock(game: GinGame, computer: Boolean): GinGame = {
 
-    val next = clone(game)
-    link(game, next)
+    new GinGame(
+      !game.playerTurn,
+      game.computerHand.toList,
+      game.playerHand.toList,
+      game.discard.toList,
+      game.stock.toList,
+      Some(game),
+      new Knock(game.playerTurn))
 
-    next.play = new Knock(next.playerTurn)
-    next.playerTurn = !next.playerTurn
-    next
+  }
 
+  def sortHand(game: GinGame, player: Boolean, cards : List[Card] ): GinGame = {
+
+    val hands = if (player) {
+      (cards, game.computerHand.toList)
+    } else {
+      (game.playerHand.toList, cards)
+    }
+
+    new GinGame(
+      game.playerTurn,
+      hands._2,
+      hands._1,
+      game.discard.toList,
+      game.stock.toList,
+      Some(game),
+      new Sort(game.playerTurn))
+
+  }
+
+  def scoreGame( game : GinGame, settings : Settings ) : (Int,Int) = {
+    (0,0)
   }
 }

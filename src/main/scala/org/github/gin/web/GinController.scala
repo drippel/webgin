@@ -23,6 +23,7 @@ import org.github.gin.player.RunMaker
 import org.github.gin.Gin
 import org.github.gin.Draw
 import org.github.gin.Knock
+import org.github.gin.Settings
 
 @Scope("session")
 @Controller
@@ -33,6 +34,7 @@ class GinController {
   var httpSession: HttpSession = null
 
   var game = GinGame.createGame()
+  var settings = Settings.default()
 
   var status = ""
 
@@ -52,7 +54,7 @@ class GinController {
     @RequestParam(required = false, value = "playerCardList") playerCardList: String) = {
 
     if (StringUtils.isNotEmpty(playerCardList)) {
-      sortPlayerHand(game, playerCardList)
+      game = sortPlayerHand(game, playerCardList)
     }
 
     openSettings = false
@@ -63,18 +65,14 @@ class GinController {
       case "stock" => { stock() }
       case "drop" => { drop(playerCardList) }
       case "cheat" => { cheat = !cheat }
-      case "settings" => { settings() }
+      case "settings" => { openSettings = true }
       case "undo" => { undo() }
       case "knock" => { knock() }
-      case "next" => { nextGame() }
+      case "another" => { nextGame() }
       case _ => { Console.println(action) }
     }
 
     buildModelAndView();
-  }
-
-  def settings() = {
-    openSettings = true
   }
 
   def drop(playerCardList: String): Unit = {
@@ -82,14 +80,22 @@ class GinController {
       dropCard(playerCardList)
       if (checkForGin(true)) {
         // notification
+        game = GinGame.gin(game)
         status = "You Win!!!!!!"
       } else {
         computerTurn()
         if (checkForGin(false)) {
           // notification
           status = "You Lose!!!!!!"
+          game = GinGame.gin(game)
         } else {
           status = "Your pick"
+
+          // detectDraw()
+          if( GinGame.detectDraw(game) ){
+            game = GinGame.draw(game)
+            status = "Draw"
+          }
         }
       }
     }
@@ -97,8 +103,8 @@ class GinController {
 
   def newGame() = {
     game = GinGame.deal(game)
-    GinGame.sortHand(game,true)
-    GinGame.sortHand(game,false)
+    game = GinGame.sortHand(game,true)
+    game = GinGame.sortHand(game,false)
     status = "New Game"
   }
 
@@ -230,7 +236,7 @@ class GinController {
   }
 
   def sortPlayerHand(game: GinGame, playerCardList: String) = {
-    game.playerHand = toCards(playerCardList)
+    GinGame.sortHand(game, true, toCards(playerCardList))
   }
 
   def checkForGin(player: Boolean): Boolean = {
@@ -255,7 +261,6 @@ class GinController {
       }
     }
 
-    game.next = None
 
   }
 
@@ -270,6 +275,7 @@ class GinController {
 
   def nextGame() = {
 
+    // determine who should deal
   }
 }
 

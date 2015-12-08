@@ -12,8 +12,7 @@ object Hand {
     CardRenderer.suits.indexOf(a.suit)
   }
 
-
-  def findPairs( cards : List[Card] ) : List[List[Card]] = {
+  def findSame( size : Int)( cards : List[Card] ) : List[List[Card]] = {
 
     val sets = new ListBuffer[List[Card]]()
 
@@ -21,7 +20,7 @@ object Hand {
 
       val (l1,l2) = cards.partition( (c) => { card.rank.equals(c.rank) } )
 
-      if( !l1.isEmpty && l1.size > 1 ){
+      if( !l1.isEmpty && l1.size > size ){
 
         if( !sets.flatten.contains(card) ){
           sets += l1
@@ -29,30 +28,12 @@ object Hand {
       }
     }
 
-
     sets.toList
   }
 
-  def findSets( cards : List[Card] ) : List[List[Card]] = {
+  def findPairs = findSame(1)(_)
 
-    //
-    val sets = new ListBuffer[List[Card]]()
-
-    for( card <- cards ){
-
-      val (l1,l2) = cards.partition( (c) => { card.rank.equals(c.rank) } )
-
-      if( !l1.isEmpty && l1.size > 2 ){
-
-        if( !sets.flatten.contains(card) ){
-          sets += l1
-        }
-      }
-    }
-
-
-    sets.toList
-  }
+  def findSets = findSame(2)(_)
 
   def findRuns = findRelated(2)(_)
 
@@ -99,15 +80,11 @@ object Hand {
 
     val runs = findRuns(hand)
 
-    val inRuns = runs.flatten
-
-    hand = hand.filter( (c) => { !inRuns.contains(c) } )
+    hand = hand.diff( runs.flatten )
 
     val sets = findSets(hand)
 
-    val inSets = sets.flatten
-
-    hand = hand.filter( (c) => { !inSets.contains(c) } )
+    hand = hand.diff( sets.flatten )
 
     if( hand.isEmpty ){
       true
@@ -131,11 +108,9 @@ object Hand {
     val sorted = sortCards(cards)
 
     val runs = findRuns(sorted)
-    val inRuns = runs.flatten
-    var notInRuns = sorted.filter( (c) => { !inRuns.contains(c)} )
+    var notInRuns = sorted.diff(runs.flatten )
     val sets = findSets(notInRuns)
-    val inSets = sets.flatten
-    val remainder = notInRuns.filter( (c) => { !inSets.contains(c)} )
+    val remainder = notInRuns.diff( sets.flatten )
 
     remainder
   }
@@ -157,7 +132,7 @@ object Hand {
         sets += run
       }
 
-      source = source.filter( (c) => { !run.contains(c) })
+      source = source.diff(run)
 
     }
 
